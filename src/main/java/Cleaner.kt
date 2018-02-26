@@ -1,21 +1,25 @@
-import javafx.application.Platform
-import javafx.collections.ObservableList
 import java.io.File
 import java.io.FileFilter
 import java.time.Instant
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZoneId
+import java.util.concurrent.LinkedBlockingQueue
 
-class Cleaner constructor(val config: Configuration, val messageQueue: ObservableList<FileTarget>) {
+class Cleaner(val config: Configuration) {
 
     val now = LocalDate.now()
     val cleanedSize = 0
     val details = mutableListOf<String>()
     val directoryFilter = DirectoryFilter()
     val oldSnapshotFileFilter = OldSnapshotFileFilter()
+    val fileList = LinkedBlockingQueue<FileTarget>()
 
-    fun cleanMavenRepository(file: File) {
+    fun start() {
+        cleanMavenRepository(File(config.path))
+    }
+
+    private fun cleanMavenRepository(file: File) {
         val lastModified = Instant.ofEpochMilli(file.lastModified())
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
@@ -32,12 +36,9 @@ class Cleaner constructor(val config: Configuration, val messageQueue: Observabl
                 val files = file.listFiles(oldSnapshotFileFilter)
                 files.forEach {
                     val size = removeFileAndReturnFreedKBytes(it)
-                    Platform.runLater({
-                        // TODO batch up to prevent flooding with runnables
-                        messageQueue.add(FileTarget(it.canonicalPath, size, ageInDays))
-                    })
-                    //messageQueue.add("About to remove directory $it.canonicalPath with total size $size and $ageInDays days old")
-                    details.add("About to remove directory $it.canonicalPath with total size $size and $ageInDays days old")
+                    fileList.add(FileTarget(it, size, ageInDays))
+                    println("Adding ${it.name}")
+                    details.add("About to remove directory ${it.canonicalPath} with total size $size and $ageInDays days old")
                 }
             }
         }
@@ -60,7 +61,12 @@ class Cleaner constructor(val config: Configuration, val messageQueue: Observabl
 
     class OldSnapshotFileFilter : FileFilter {
         override fun accept(file: File): Boolean {
-            return !file.name.contains("-SNAPSHOT") && (file.name.endsWith(".jar") || file.name.endsWith(".jar.sha1") || file.name.endsWith(".pom") || file.name.endsWith(".pom.sha1"))
+            return !file.name.contains("-SNAPSHOT") &&
+                    (file.name.endsWith(".jar") ||
+                            file.name.endsWith(".jar.sha1") ||
+                            file.name.endsWith(".pom") ||
+                            file.name.endsWith(".pom.sha1")
+                            )
         }
     }
 }
