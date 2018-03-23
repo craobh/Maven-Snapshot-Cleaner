@@ -1,7 +1,6 @@
 import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
-import javafx.concurrent.Task
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.fxml.FXML
@@ -12,6 +11,7 @@ import javafx.scene.control.TableColumn
 import javafx.scene.control.TableView
 import javafx.scene.control.TextField
 import javafx.scene.control.cell.CheckBoxTableCell
+import javafx.util.Duration
 
 
 class FXMLController {
@@ -45,49 +45,28 @@ class FXMLController {
 
     var messages: ObservableList<FileTarget> = FXCollections.observableArrayList<FileTarget>()
 
-    private val cleanerTask = object : Task<Void>() {
-        public override fun call(): Void? {
-            cleaner.start()
-            return null
-        }
-    }
-
-    private val updateFileListTask = object : Task<Void>() {
-        public override fun call(): Void? {
-
-            while (!isCancelled) {
-                println("Draining ${cleaner.fileList.size} messages")
-                Platform.runLater {
-                    cleaner.fileList.drainTo(messages)
-                }
-                Thread.sleep(100)
-            }
-            // Drain any pending messages discovered while sleeping
-            Platform.runLater {
-                cleaner.fileList.drainTo(messages)
-            }
-            return null
-        }
-    }
-
     private lateinit var cleaner: Cleaner
-
-    private val cleanerThread = Thread(cleanerTask)
-    private val updateFileListThread = Thread(updateFileListTask)
 
     fun initialize() {
         val config = Configuration()
         cleaner = Cleaner(config)
+        val cleanerService = CleanerService(cleaner)
 
-        progressBar.visibleProperty().bind(cleanerTask.runningProperty())
+        val updateFileListService = UpdateFileListService(cleaner)
+        updateFileListService.period = Duration.millis(500.0)
+        updateFileListService.delay = Duration.millis(500.0)
+        updateFileListService.setOnSucceeded { _ ->
+            Platform.runLater {
+                updateFileListService.lastValue.drainTo(messages)
+            }
+        }
+
+        progressBar.visibleProperty().bind(cleanerService.runningProperty())
 
         dryRunCheckbox.isSelected = config.dryRun
         dryRunCheckbox.selectedProperty().addListener { _, _, newValue -> config.dryRun = newValue }
 
         m2PathField.text = config.path
-
-        cleanerThread.isDaemon = true
-        updateFileListThread.isDaemon = true
 
         deleteColumn.cellFactory = CheckBoxTableCell.forTableColumn(deleteColumn)
 
@@ -96,25 +75,26 @@ class FXMLController {
         deleteColumn.graphic = selectAllCheckBox
         selectAllCheckBox.onAction = EventHandler<ActionEvent> {
             if (selectAllCheckBox.isSelected) {
-                messages.map { row -> row.delete.set(true) }
+                messages.forEach { row -> row.delete.set(true) }
             } else {
-                messages.map { row -> row.delete.set(false) }
+                messages.forEach { row -> row.delete.set(false) }
             }
         }
 
         startButton.onAction = EventHandler<ActionEvent> {
             println("Start clicked!")
-            if (!cleanerThread.isAlive) {
-                println("Starting!")
+            if (startButton.text == "Start") {
                 startButton.text = "Stop"
-                cleanerThread.start()
-                updateFileListThread.start()
+                messages.clear()
+                cleanerService.start()
+                updateFileListService.start()
             } else {
                 println("Stopping!")
-                // TODO kill thread some other way than Thread.stop()
                 startButton.text = "Start"
-                cleanerThread.stop()
-                updateFileListTask.cancel()
+                cleanerService.cancel()
+                cleanerService.reset()
+                updateFileListService.cancel()
+                updateFileListService.reset()
             }
         }
     }

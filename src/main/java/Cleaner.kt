@@ -15,30 +15,37 @@ class Cleaner(val config: Configuration) {
     val oldSnapshotFileFilter = OldSnapshotFileFilter()
     val fileList = LinkedBlockingQueue<FileTarget>()
 
+    var cancelled = false
+
     fun start() {
         cleanMavenRepository(File(config.path))
     }
 
     private fun cleanMavenRepository(file: File) {
-        val lastModified = Instant.ofEpochMilli(file.lastModified())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
+        if (!cancelled) {
 
-        val ageInDays = Period.between(lastModified, now).days
-        val directories = file.listFiles(directoryFilter)
+            val lastModified = Instant.ofEpochMilli(file.lastModified())
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
 
-        if (directories.isNotEmpty()) {
-            directories.forEach {
-                cleanMavenRepository(it)
-            }
-        } else {
-            if (file.canonicalPath.endsWith("-SNAPSHOT")) {
-                val files = file.listFiles(oldSnapshotFileFilter)
-                files.forEach {
-                    val size = removeFileAndReturnFreedKBytes(it)
-                    fileList.add(FileTarget(it, size, ageInDays))
-                    println("Adding ${it.name}")
-                    details.add("About to remove directory ${it.canonicalPath} with total size $size and $ageInDays days old")
+            val ageInDays = Period.between(lastModified, now).days
+            val directories = file.listFiles(directoryFilter)
+
+            if (directories.isNotEmpty()) {
+                directories.forEach {
+                    cleanMavenRepository(it)
+                }
+            } else {
+                if (file.canonicalPath.endsWith("-SNAPSHOT")) {
+                    val files = file.listFiles(oldSnapshotFileFilter)
+                    files.forEach {
+                        if (!cancelled) {
+                            val size = removeFileAndReturnFreedKBytes(it)
+                            fileList.add(FileTarget(it, size, ageInDays))
+                            println("Adding ${it.name}")
+                            details.add("About to remove directory ${it.canonicalPath} with total size $size and $ageInDays days old")
+                        }
+                    }
                 }
             }
         }
