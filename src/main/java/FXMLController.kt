@@ -45,14 +45,15 @@ class FXMLController {
 
     var messages: ObservableList<FileTarget> = FXCollections.observableArrayList<FileTarget>()
 
-    private lateinit var cleaner: Cleaner
-
     fun initialize() {
         val config = Configuration()
-        cleaner = Cleaner(config)
-        val cleanerService = CleanerService(cleaner)
 
-        val updateFileListService = UpdateFileListService(cleaner)
+        val fileDiscoveryService = FileDiscoveryService(config)
+        fileDiscoveryService.setOnCancelled {
+            fileDiscoveryService.reset()
+        }
+
+        val updateFileListService = UpdateFileListService(fileDiscoveryService)
         updateFileListService.period = Duration.millis(500.0)
         updateFileListService.delay = Duration.millis(500.0)
         updateFileListService.setOnSucceeded { _ ->
@@ -60,8 +61,11 @@ class FXMLController {
                 updateFileListService.lastValue.drainTo(messages)
             }
         }
+        updateFileListService.setOnCancelled {
+            updateFileListService.reset()
+        }
 
-        progressBar.visibleProperty().bind(cleanerService.runningProperty())
+        progressBar.visibleProperty().bind(fileDiscoveryService.runningProperty())
 
         dryRunCheckbox.isSelected = config.dryRun
         dryRunCheckbox.selectedProperty().addListener { _, _, newValue -> config.dryRun = newValue }
@@ -86,15 +90,13 @@ class FXMLController {
             if (startButton.text == "Start") {
                 startButton.text = "Stop"
                 messages.clear()
-                cleanerService.start()
+                fileDiscoveryService.start()
                 updateFileListService.start()
             } else {
                 println("Stopping!")
                 startButton.text = "Start"
-                cleanerService.cancel()
-                cleanerService.reset()
+                fileDiscoveryService.cancel()
                 updateFileListService.cancel()
-                updateFileListService.reset()
             }
         }
     }
