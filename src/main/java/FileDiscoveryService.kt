@@ -56,7 +56,7 @@ class FileDiscoveryService(val config: Configuration) : Service<Void>() {
                     if (task.isCancelled) {
                         return
                     }
-                    val size = file.length()
+                    val size = file.length() / 1024
                     fileList.add(FileTarget(it, size, ageInDays))
                     println("Adding ${it.name}")
                 }
