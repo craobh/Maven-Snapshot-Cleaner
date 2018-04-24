@@ -15,12 +15,17 @@ import javafx.scene.control.TableView
 import javafx.scene.control.TextArea
 import javafx.scene.control.TextField
 import javafx.scene.control.cell.CheckBoxTableCell
+import javafx.scene.layout.AnchorPane
+import javafx.stage.DirectoryChooser
 import javafx.util.Duration
 import java.io.PrintWriter
 import java.io.StringWriter
 
 
 class FXMLController {
+
+    @FXML
+    lateinit var anchor: AnchorPane
 
     @FXML
     lateinit var startButton: Button
@@ -102,6 +107,13 @@ class FXMLController {
         }
 
         m2PathField.text = config.path
+        m2PathField.setOnMouseClicked {
+            val directoryChooser = DirectoryChooser()
+            directoryChooser.title = "Select .m2 folder"
+            val selectedFile = directoryChooser.showDialog(anchor.scene.window)?.absolutePath ?: config.path
+            m2PathField.text = selectedFile
+            config.path = selectedFile
+        }
 
         deleteColumn.cellFactory = CheckBoxTableCell.forTableColumn(deleteColumn)
 
