@@ -30,7 +30,7 @@
                         <PropertyValueFactory property="filePath"/>
                     </cellValueFactory>
                 </TableColumn>
-                <TableColumn fx:id="sizeColumn" editable="false" text="Size (KB)">
+                <TableColumn fx:id="sizeColumn" editable="false" text="Size (KiB)">
                     <cellValueFactory>
                         <PropertyValueFactory property="size"/>
                     </cellValueFactory>

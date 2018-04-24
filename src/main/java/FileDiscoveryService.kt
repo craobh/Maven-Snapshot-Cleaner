@@ -31,6 +31,7 @@ class FileDiscoveryService(val config: Configuration) : Service<Void>() {
     }
 
     private fun traverseFolder(file: File) {
+        println("Scanning: ${file.absolutePath}")
         if (task.isCancelled) {
             return
         }

@@ -123,8 +123,8 @@ class FXMLController {
                 startButton.text = "Stop"
                 deleteButton.isDisable = true
                 messages.clear()
-                fileDiscoveryService.start()
-                updateFileListService.start()
+                fileDiscoveryService.restart()
+                updateFileListService.restart()
             } else {
                 println("Stopping!")
                 startButton.text = "Start"
@@ -136,11 +136,18 @@ class FXMLController {
             }
         }
 
+        fileDiscoveryService.setOnSucceeded {
+            startButton.text = "Start"
+            if (!messages.none { it.delete.value }) {
+                deleteButton.isDisable = false
+            }
+        }
+
         deleteButton.onAction = EventHandler<ActionEvent> {
             println("Delete clicked")
             val confirmationAlert = Alert(Alert.AlertType.CONFIRMATION)
             confirmationAlert.title = "Confirm Delete"
-            confirmationAlert.headerText = null
+            confirmationAlert.headerText = "Space to be cleaned: ${calculateCleanSize()}KiB"
             confirmationAlert.contentText = "Are you sure you want to delete the selected files? This operation cannot be undone."
 
             val confirmationResult = confirmationAlert.showAndWait()
@@ -181,5 +188,12 @@ class FXMLController {
                 deleteTask.run()
             }
         }
+    }
+
+    private fun calculateCleanSize(): String {
+        return messages.filter { it.delete.value }
+                .map { it.size.intValue() }
+                .sum()
+                .toString()
     }
 }
