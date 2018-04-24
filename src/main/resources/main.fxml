@@ -18,7 +18,7 @@
         <opaqueInsets>
             <Insets/>
         </opaqueInsets>
-        <TableView fx:id="fileTable" editable="true" items="${controller.messages}" HBox.hgrow="ALWAYS">
+        <TableView fx:id="fileTable" editable="true" items="${controller.filteredMessages}" HBox.hgrow="ALWAYS">
             <columns>
                 <TableColumn fx:id="deleteColumn" resizable="false" prefWidth="30.0">
                     <cellValueFactory>
@@ -73,6 +73,11 @@
             </HBox.margin>
         </TextField>
         <CheckBox fx:id="dryRunCheckbox" mnemonicParsing="false" text="Dry Run">
+            <HBox.margin>
+                <Insets left="10.0"/>
+            </HBox.margin>
+        </CheckBox>
+        <CheckBox fx:id="filterJarsCheckbox" mnemonicParsing="false" text="Show only jars">
             <HBox.margin>
                 <Insets left="10.0"/>
             </HBox.margin>

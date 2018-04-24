@@ -1,6 +1,7 @@
 import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
+import javafx.collections.transformation.FilteredList
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.fxml.FXML
@@ -37,6 +38,9 @@ class FXMLController {
     lateinit var dryRunCheckbox: CheckBox
 
     @FXML
+    lateinit var filterJarsCheckbox: CheckBox
+
+    @FXML
     lateinit var fileTable: TableView<FileTarget>
 
     @FXML
@@ -51,7 +55,8 @@ class FXMLController {
     @FXML
     lateinit var deleteColumn: TableColumn<FileTarget, Boolean>
 
-    var messages: ObservableList<FileTarget> = FXCollections.observableArrayList<FileTarget>()
+    private var messages: ObservableList<FileTarget> = FXCollections.observableArrayList<FileTarget>()
+    var filteredMessages = FilteredList(messages, { true })
 
     fun initialize() {
         val config = Configuration()
@@ -83,6 +88,18 @@ class FXMLController {
 
         dryRunCheckbox.isSelected = config.dryRun
         dryRunCheckbox.selectedProperty().addListener { _, _, newValue -> config.dryRun = newValue }
+
+        filterJarsCheckbox.selectedProperty().addListener { _, _, selected ->
+            run {
+                filteredMessages.setPredicate { p ->
+                    if (selected) {
+                        p.filePath.value.endsWith(".jar")
+                    } else {
+                        true
+                    }
+                }
+            }
+        }
 
         m2PathField.text = config.path
 
