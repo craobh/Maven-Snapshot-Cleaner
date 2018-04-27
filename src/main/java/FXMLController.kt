@@ -43,9 +43,6 @@ class FXMLController {
     lateinit var dryRunCheckbox: CheckBox
 
     @FXML
-    lateinit var filterJarsCheckbox: CheckBox
-
-    @FXML
     lateinit var fileTable: TableView<FileTarget>
 
     @FXML
@@ -93,18 +90,6 @@ class FXMLController {
 
         dryRunCheckbox.isSelected = config.dryRun
         dryRunCheckbox.selectedProperty().addListener { _, _, newValue -> config.dryRun = newValue }
-
-        filterJarsCheckbox.selectedProperty().addListener { _, _, selected ->
-            run {
-                filteredMessages.setPredicate { p ->
-                    if (selected) {
-                        p.filePath.value.endsWith(".jar")
-                    } else {
-                        true
-                    }
-                }
-            }
-        }
 
         m2PathField.text = config.path
         m2PathField.setOnMouseClicked {
@@ -164,7 +149,7 @@ class FXMLController {
 
             val confirmationResult = confirmationAlert.showAndWait()
             if (confirmationResult.get() == ButtonType.OK) {
-                val deleteTask = DeleteTask(messages.filter { it.delete.value })
+                val deleteTask = DeleteTask(messages.filter { it.delete.value }, deleteMetadata = true) //todo make deleteMetadata configurable
 
                 deleteTask.setOnSucceeded {
                     val alert = Alert(Alert.AlertType.INFORMATION)
@@ -197,7 +182,8 @@ class FXMLController {
                     alert.showAndWait()
                 }
 
-                deleteTask.run()
+                // todo connect dry run
+                //deleteTask.run()
             }
         }
     }

@@ -7,8 +7,8 @@ import java.io.File
 /**
  * Represents a target file to be deleted
  */
-class FileTarget(filePath: File, size: Long, age: Int, delete: Boolean = true) {
-    val filePath = SimpleStringProperty(filePath.absolutePath)
+class FileTarget(val file: File, size: Long, age: Int, delete: Boolean = true, val metadata: List<File> = listOf()) {
+    val filePath = SimpleStringProperty(file.absolutePath)
     val size = SimpleLongProperty(size)
     val age = SimpleIntegerProperty(age)
     var delete = SimpleBooleanProperty(delete)

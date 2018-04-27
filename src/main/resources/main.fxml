@@ -77,10 +77,5 @@
                 <Insets left="10.0"/>
             </HBox.margin>
         </CheckBox>
-        <CheckBox fx:id="filterJarsCheckbox" mnemonicParsing="false" text="Show only jars">
-            <HBox.margin>
-                <Insets left="10.0"/>
-            </HBox.margin>
-        </CheckBox>
     </HBox>
 </AnchorPane>

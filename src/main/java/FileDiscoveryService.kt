@@ -11,7 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue
 /**
  * Service which recursively traverses the filesystem and finds potential files to be deleted
  */
-class FileDiscoveryService(val config: Configuration) : Service<Void>() {
+class FileDiscoveryService(private val config: Configuration) : Service<Void>() {
 
     private lateinit var task: Task<Void>
 
@@ -36,11 +36,6 @@ class FileDiscoveryService(val config: Configuration) : Service<Void>() {
             return
         }
 
-        val lastModified = Instant.ofEpochMilli(file.lastModified())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
-
-        val ageInDays = Period.between(lastModified, now).days
         val directories = file.listFiles(directoryFilter)
 
         if (directories.isNotEmpty()) {
@@ -53,16 +48,29 @@ class FileDiscoveryService(val config: Configuration) : Service<Void>() {
         } else {
             if (file.canonicalPath.endsWith("-SNAPSHOT")) {
                 val files = file.listFiles(oldSnapshotFileFilter)
-                files.forEach {
+                val jars = files.filter { it.name.endsWith(".jar") }
+                jars.forEach {
                     if (task.isCancelled) {
                         return
                     }
-                    val size = file.length() / 1024
-                    fileList.add(FileTarget(it, size, ageInDays))
+                    val size = it.length() / 1024
+                    val fileName = it.name.substringBefore(".jar")
+                    val metadata = files.filter { !it.name.endsWith(".jar") && it.name.startsWith(fileName)}
+                    val fileAge = getFileAge(it)
+                    val fileTarget = FileTarget(it, size, fileAge, metadata = metadata)
                     println("Adding ${it.name}")
+                    fileList.add(fileTarget)
                 }
             }
         }
+    }
+
+    private fun getFileAge(file: File): Int {
+        val lastModified = Instant.ofEpochMilli(file.lastModified())
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+
+        return Period.between(lastModified, now).days
     }
 
     /**
