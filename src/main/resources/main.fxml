@@ -18,7 +18,7 @@
         <opaqueInsets>
             <Insets/>
         </opaqueInsets>
-        <TableView fx:id="fileTable" editable="true" items="${controller.filteredMessages}" HBox.hgrow="ALWAYS">
+        <TableView fx:id="fileTable" editable="true" items="${controller.messages}" HBox.hgrow="ALWAYS">
             <columns>
                 <TableColumn fx:id="deleteColumn" resizable="false" prefWidth="30.0">
                     <cellValueFactory>

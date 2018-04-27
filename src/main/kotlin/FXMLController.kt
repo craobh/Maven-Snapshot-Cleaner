@@ -1,7 +1,6 @@
 import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
-import javafx.collections.transformation.FilteredList
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.fxml.FXML
@@ -57,8 +56,7 @@ class FXMLController {
     @FXML
     lateinit var deleteColumn: TableColumn<FileTarget, Boolean>
 
-    private var messages: ObservableList<FileTarget> = FXCollections.observableArrayList<FileTarget>()
-    var filteredMessages = FilteredList(messages, { true })
+    var messages: ObservableList<FileTarget> = FXCollections.observableArrayList<FileTarget>()
 
     fun initialize() {
         val config = Configuration()
