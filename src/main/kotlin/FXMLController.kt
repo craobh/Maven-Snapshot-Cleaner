@@ -20,7 +20,6 @@ import javafx.util.Duration
 import java.io.PrintWriter
 import java.io.StringWriter
 
-
 class FXMLController {
 
     @FXML
@@ -37,6 +36,9 @@ class FXMLController {
 
     @FXML
     lateinit var m2PathField: TextField
+
+    @FXML
+    lateinit var currentPath: TextField
 
     @FXML
     lateinit var dryRunCheckbox: CheckBox
@@ -84,6 +86,8 @@ class FXMLController {
             updateFileListService.reset()
         }
 
+        currentPath.textProperty().bind(fileDiscoveryService.messageProperty())
+
         progressBar.visibleProperty().bind(fileDiscoveryService.runningProperty())
 
         dryRunCheckbox.isSelected = config.dryRun
@@ -128,11 +132,14 @@ class FXMLController {
                 }
                 fileDiscoveryService.cancel()
                 updateFileListService.cancel()
+                currentPath.clear()
             }
         }
 
         fileDiscoveryService.setOnSucceeded {
             startButton.text = "Start"
+            currentPath.clear()
+
             if (!messages.none { it.delete.value }) {
                 deleteButton.isDisable = false
             }

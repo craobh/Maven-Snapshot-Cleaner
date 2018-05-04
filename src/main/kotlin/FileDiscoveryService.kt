@@ -37,6 +37,8 @@ class FileDiscoveryService(private val config: Configuration) : Service<Void>() 
                             return FileVisitResult.TERMINATE
                         }
 
+                        updateMessage(dir.toFile().canonicalPath)
+
                         return if (dir.toFile().canonicalPath.endsWith("-SNAPSHOT")) {
                             val files = dir.toFile().listFiles(deleteCandidateFileFilter)
                             val jars = files.filter { it.name.endsWith(".jar") }
