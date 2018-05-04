@@ -2,6 +2,12 @@ import javafx.concurrent.Service
 import javafx.concurrent.Task
 import java.io.File
 import java.io.FileFilter
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
 import java.time.LocalDate
 import java.time.Period
@@ -16,53 +22,44 @@ class FileDiscoveryService(private val config: Configuration) : Service<Void>() 
     private lateinit var task: Task<Void>
 
     private val now = LocalDate.now()
-    private val directoryFilter = DirectoryFilter()
-    private val oldSnapshotFileFilter = OldSnapshotFileFilter()
+    private val deleteCandidateFileFilter = DeleteCandidateFileFilter()
     val fileList = LinkedBlockingQueue<FileTarget>()
 
     override fun createTask(): Task<Void> {
         task = object : Task<Void>() {
             public override fun call(): Void? {
-                traverseFolder(File(config.path))
+
+                val visitor = object: SimpleFileVisitor<Path>() {
+
+                    override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes?): FileVisitResult {
+                        println("Scanning: $dir")
+                        if (isCancelled) {
+                            return FileVisitResult.TERMINATE
+                        }
+
+                        return if (dir.toFile().canonicalPath.endsWith("-SNAPSHOT")) {
+                            val files = dir.toFile().listFiles(deleteCandidateFileFilter)
+                            val jars = files.filter { it.name.endsWith(".jar") }
+                            jars.forEach {
+                                val size = it.length() / 1024
+                                val fileName = it.name.substringBefore(".jar")
+                                val metadata = files.filter { !it.name.endsWith(".jar") && it.name.startsWith(fileName) }
+                                val fileAge = getFileAge(it)
+                                val fileTarget = FileTarget(it, size, fileAge, metadata = metadata)
+                                fileList.add(fileTarget)
+                            }
+                            FileVisitResult.SKIP_SUBTREE
+                        } else {
+                            FileVisitResult.CONTINUE
+                        }
+                    }
+                }
+
+                Files.walkFileTree(Paths.get(config.path), visitor)
                 return null
             }
         }
         return task
-    }
-
-    private fun traverseFolder(file: File) {
-        println("Scanning: ${file.absolutePath}")
-        if (task.isCancelled) {
-            return
-        }
-
-        val directories = file.listFiles(directoryFilter)
-
-        if (directories.isNotEmpty()) {
-            directories.forEach {
-                if (task.isCancelled) {
-                    return
-                }
-                traverseFolder(it)
-            }
-        } else {
-            if (file.canonicalPath.endsWith("-SNAPSHOT")) {
-                val files = file.listFiles(oldSnapshotFileFilter)
-                val jars = files.filter { it.name.endsWith(".jar") }
-                jars.forEach {
-                    if (task.isCancelled) {
-                        return
-                    }
-                    val size = it.length() / 1024
-                    val fileName = it.name.substringBefore(".jar")
-                    val metadata = files.filter { !it.name.endsWith(".jar") && it.name.startsWith(fileName)}
-                    val fileAge = getFileAge(it)
-                    val fileTarget = FileTarget(it, size, fileAge, metadata = metadata)
-                    println("Adding ${it.name}")
-                    fileList.add(fileTarget)
-                }
-            }
-        }
     }
 
     private fun getFileAge(file: File): Int {
@@ -74,18 +71,9 @@ class FileDiscoveryService(private val config: Configuration) : Service<Void>() 
     }
 
     /**
-     * FileFilter which only accepts directories
+     * FileFilter which finds all but the latest snapshot jars (and the metadata files for each of them)
      */
-    class DirectoryFilter : FileFilter {
-        override fun accept(pathname: File): Boolean {
-            return pathname.isDirectory
-        }
-    }
-
-    /**
-     * FileFilter which only accepts directories
-     */
-    class OldSnapshotFileFilter : FileFilter {
+    private class DeleteCandidateFileFilter : FileFilter {
         override fun accept(file: File): Boolean {
             return !file.name.contains("-SNAPSHOT") &&
                     (file.name.endsWith(".jar") || file.name.endsWith(".jar.sha1") ||
