@@ -60,6 +60,16 @@
                 <Insets left="10.0"/>
             </HBox.margin>
         </ProgressBar>
+        <Label text="Clean Size">
+            <HBox.margin>
+                <Insets left="5.0"/>
+            </HBox.margin>
+        </Label>
+        <TextField fx:id="sizeField" editable="false">
+            <HBox.margin>
+                <Insets left="5.0"/>
+            </HBox.margin>
+        </TextField>
     </HBox>
     <HBox alignment="CENTER_LEFT" prefHeight="30.0" prefWidth="600.0" AnchorPane.topAnchor="30.0">
         <Label text="m2 Path">
@@ -67,7 +77,7 @@
                 <Insets left="5.0"/>
             </HBox.margin>
         </Label>
-        <TextField fx:id="m2PathField">
+        <TextField fx:id="m2PathField" prefWidth="200">
             <HBox.margin>
                 <Insets left="5.0"/>
             </HBox.margin>

@@ -1,5 +1,7 @@
 import javafx.application.Platform
+import javafx.beans.Observable
 import javafx.collections.FXCollections
+import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
@@ -41,6 +43,9 @@ class FXMLController {
     lateinit var currentPath: TextField
 
     @FXML
+    lateinit var sizeField: TextField
+
+    @FXML
     lateinit var dryRunCheckbox: CheckBox
 
     @FXML
@@ -58,10 +63,15 @@ class FXMLController {
     @FXML
     lateinit var deleteColumn: TableColumn<FileTarget, Boolean>
 
-    var messages: ObservableList<FileTarget> = FXCollections.observableArrayList<FileTarget>()
+    var messages: ObservableList<FileTarget> = FXCollections.observableArrayList<FileTarget> {
+        // Callback to notify when delete property gets changed
+        ft: FileTarget ->  arrayOf<Observable>(ft.deleteProperty())
+    }
 
     fun initialize() {
         val config = Configuration()
+
+        messages.addListener { _: ListChangeListener.Change<out FileTarget> -> sizeField.text = calculateCleanSize() }
 
         pathColumn.prefWidthProperty().bind(fileTable.widthProperty().subtract(deleteColumn.width).multiply(0.6))
         sizeColumn.prefWidthProperty().bind(fileTable.widthProperty().subtract(deleteColumn.width).multiply(0.2))
@@ -139,6 +149,7 @@ class FXMLController {
         fileDiscoveryService.setOnSucceeded {
             startButton.text = "Start"
             currentPath.clear()
+            updateFileListService.cancel()
 
             if (!messages.none { it.delete.value }) {
                 deleteButton.isDisable = false
