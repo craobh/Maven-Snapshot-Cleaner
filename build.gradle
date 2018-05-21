@@ -12,7 +12,7 @@ idea {
 mainClassName = "App"
 
 buildscript {
-    ext.kotlin_version = '1.2.40'
+    ext.kotlin_version = '1.2.41'
     repositories {
         mavenCentral()
     }
@@ -45,4 +45,5 @@ jar {
     manifest {
         attributes 'Main-Class': 'App'
     }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
