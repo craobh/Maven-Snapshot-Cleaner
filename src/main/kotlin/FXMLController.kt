@@ -199,7 +199,7 @@ class FXMLController {
                 }
 
                 // todo connect dry run
-                //deleteTask.run()
+                deleteTask.run()
             }
         }
     }
