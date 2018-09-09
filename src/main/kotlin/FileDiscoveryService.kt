@@ -42,12 +42,12 @@ class FileDiscoveryService(private val config: Configuration) : Service<Void>() 
                         return if (dir.toFile().canonicalPath.endsWith("-SNAPSHOT")) {
                             val files = dir.toFile().listFiles(deleteCandidateFileFilter)
                             val jars = files.filter { it.name.endsWith(".jar") }
-                            jars.forEach {
-                                val size = it.length() / 1024
-                                val fileName = it.name.substringBefore(".jar")
-                                val metadata = files.filter { !it.name.endsWith(".jar") && it.name.startsWith(fileName) }
-                                val fileAge = getFileAge(it)
-                                val fileTarget = FileTarget(it, size, fileAge, metadata = metadata)
+                            jars.forEach { jar ->
+                                val size = jar.length() / 1024
+                                val fileName = jar.name.substringBefore(".jar")
+                                val metadata = files.filter { !it.name.endsWith(".jar") && it.name.startsWith("$fileName.") }
+                                val fileAge = getFileAge(jar)
+                                val fileTarget = FileTarget(jar, size, fileAge, metadata = metadata)
                                 fileList.add(fileTarget)
                             }
                             FileVisitResult.SKIP_SUBTREE
