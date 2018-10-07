@@ -121,7 +121,7 @@ class FXMLController {
             }
         }
 
-        startButton.onAction = EventHandler<ActionEvent> {
+        startButton.onAction = EventHandler<ActionEvent> { _ ->
             println("Start clicked!")
             if (!File(config.path).isDirectory) {
                 val invalidDirectoryAlert = Alert(Alert.AlertType.ERROR)
@@ -148,7 +148,7 @@ class FXMLController {
             }
         }
 
-        fileDiscoveryService.setOnSucceeded {
+        fileDiscoveryService.setOnSucceeded { _ ->
             startButton.text = "Start"
             currentPath.clear()
             updateFileListService.cancel()
@@ -158,7 +158,7 @@ class FXMLController {
             }
         }
 
-        deleteButton.onAction = EventHandler<ActionEvent> {
+        deleteButton.onAction = EventHandler<ActionEvent> { _ ->
             println("Delete clicked")
             val confirmationAlert = Alert(Alert.AlertType.CONFIRMATION)
             confirmationAlert.title = "Confirm Delete"

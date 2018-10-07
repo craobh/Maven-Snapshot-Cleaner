@@ -6,14 +6,14 @@ class DeleteTask(private val filesToDelete: List<FileTarget>, private val delete
 
     override fun call(): Long {
         var cleanedSize = 0L
-        filesToDelete.forEach {
-            Files.delete(Paths.get(it.file.toURI()))
+        filesToDelete.forEach { file ->
+            Files.delete(Paths.get(file.file.toURI()))
             if (deleteMetadata) {
-                it.metadata.forEach {
+                file.metadata.forEach {
                     Files.delete(Paths.get(it.toURI()))
                 }
             }
-            cleanedSize += it.size.value
+            cleanedSize += file.size.value
         }
         return cleanedSize
     }
