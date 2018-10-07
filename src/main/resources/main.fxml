@@ -82,11 +82,6 @@
                 <Insets left="5.0"/>
             </HBox.margin>
         </TextField>
-        <CheckBox fx:id="dryRunCheckbox" mnemonicParsing="false" text="Dry Run">
-            <HBox.margin>
-                <Insets left="10.0"/>
-            </HBox.margin>
-        </CheckBox>
     </HBox>
     <HBox alignment="CENTER_LEFT" prefHeight="30.0" AnchorPane.topAnchor="60.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
         <TextField fx:id="currentPath" editable="false" HBox.hgrow="ALWAYS">

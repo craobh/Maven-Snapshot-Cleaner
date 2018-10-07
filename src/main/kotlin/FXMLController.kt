@@ -46,9 +46,6 @@ class FXMLController {
     lateinit var sizeField: TextField
 
     @FXML
-    lateinit var dryRunCheckbox: CheckBox
-
-    @FXML
     lateinit var fileTable: TableView<FileTarget>
 
     @FXML
@@ -99,9 +96,6 @@ class FXMLController {
         currentPath.textProperty().bind(fileDiscoveryService.messageProperty())
 
         progressBar.visibleProperty().bind(fileDiscoveryService.runningProperty())
-
-        dryRunCheckbox.isSelected = config.dryRun
-        dryRunCheckbox.selectedProperty().addListener { _, _, newValue -> config.dryRun = newValue }
 
         m2PathField.text = config.path
         m2PathField.setOnMouseClicked {
@@ -165,7 +159,7 @@ class FXMLController {
 
             val confirmationResult = confirmationAlert.showAndWait()
             if (confirmationResult.get() == ButtonType.OK) {
-                val deleteTask = DeleteTask(messages.filter { it.delete.value }, deleteMetadata = true) //todo make deleteMetadata configurable
+                val deleteTask = DeleteTask(messages.filter { it.delete.value }, deleteMetadata = true)
 
                 deleteTask.setOnSucceeded {
                     val alert = Alert(Alert.AlertType.INFORMATION)
@@ -198,7 +192,6 @@ class FXMLController {
                     alert.showAndWait()
                 }
 
-                // todo connect dry run
                 deleteTask.run()
             }
         }
