@@ -58,6 +58,7 @@ class FileDiscoveryService(private val config: Configuration) : Service<Void>() 
                 }
 
                 Files.walkFileTree(Paths.get(config.path), visitor)
+                println("Scanning finished")
                 return null
             }
         }

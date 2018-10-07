@@ -19,6 +19,7 @@ import javafx.scene.control.cell.CheckBoxTableCell
 import javafx.scene.layout.AnchorPane
 import javafx.stage.DirectoryChooser
 import javafx.util.Duration
+import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -122,21 +123,28 @@ class FXMLController {
 
         startButton.onAction = EventHandler<ActionEvent> {
             println("Start clicked!")
-            if (startButton.text == "Start") {
-                startButton.text = "Stop"
-                deleteButton.isDisable = true
-                messages.clear()
-                fileDiscoveryService.restart()
-                updateFileListService.restart()
+            if (!File(config.path).isDirectory) {
+                val invalidDirectoryAlert = Alert(Alert.AlertType.ERROR)
+                invalidDirectoryAlert.headerText = null
+                invalidDirectoryAlert.contentText = "Directory is invalid."
+                invalidDirectoryAlert.show()
             } else {
-                println("Stopping!")
-                startButton.text = "Start"
-                if (!messages.none { it.delete.value }) {
-                    deleteButton.isDisable = false
+                if (startButton.text == "Start") {
+                    startButton.text = "Stop"
+                    deleteButton.isDisable = true
+                    messages.clear()
+                    fileDiscoveryService.restart()
+                    updateFileListService.restart()
+                } else {
+                    println("Stopping!")
+                    startButton.text = "Start"
+                    if (!messages.none { it.delete.value }) {
+                        deleteButton.isDisable = false
+                    }
+                    fileDiscoveryService.cancel()
+                    updateFileListService.cancel()
+                    currentPath.clear()
                 }
-                fileDiscoveryService.cancel()
-                updateFileListService.cancel()
-                currentPath.clear()
             }
         }
 
